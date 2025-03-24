@@ -1,15 +1,22 @@
 const d =
 (
-    f: (x: number) => number,
-    x: number,
+    f: (...x: number[]) => number,
+    x: number[],
     h = 1e-5,
 ) =>
-    (f(x+h)-f(x-h))/(2*h)
+    Array.from({ length: x.length }, (_, i) => {
+        const x1 = [...x]
+        const x2 = [...x]
+        x1[i] += h
+        x2[i] -= h
+
+        return (f(...x1)-f(...x2))/(2*h)
+    })
 
 const gd =
 (
-    f: (x: number) => number,
-    initialX: number,
+    f: (...x: number[]) => number,
+    initialX: number[],
     learningRate = 0.1,
     epochs = 100,
 ) => {
@@ -18,14 +25,16 @@ const gd =
     for (let i=0; i<epochs; i++) {
         const grad = d(f, x)
 
-        x -= learningRate * grad
+        x = x.map((x, i) => x - learningRate * grad[i])
 
         if (i%10 == 0) {
-            console.log(`Epoch ${i}: x = ${x}, f(x) = ${f(x)}`)
+            console.log(
+                `Epoch ${i}: x = ${x.map(n => n.toFixed(3))}, f(x) = ${f(...x).toFixed(3)}`
+            )
         }
     }
 
     return x
 }
 
-gd(x => x**2-4*x+4, 0)
+gd((x, y) => x**2+(y-6)**2, [2, 3], 0.1)
